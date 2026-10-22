@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { applyBoard, emptyBoard, type BoardAction, type BoardState } from "./board-ops";
-import { loadBoard, pushBoard, unlockBoard } from "./fieldline.functions";
+import { loadBoard, pushBoard, registerAccount, unlockBoard } from "./fieldline.functions";
 import type { ColumnId, Photo, Priority, Role, TabId, TimeEntry, TimeKind } from "./types";
 import { uid } from "./utils";
 
@@ -26,6 +26,8 @@ type FieldState = BoardState & {
   setAssignOpen: (open: boolean) => void;
   clockIn: () => void;
   clockOut: () => void;
+  clockInEmployee: (employeeId: string) => void;
+  clockOutEmployee: (employeeId: string) => void;
   startJob: (taskId: string) => void;
   stopOpenAux: (employeeId?: string) => void;
   startAux: (kind: Exclude<TimeKind, "shift">, taskId?: string, note?: string) => void;
@@ -46,9 +48,29 @@ type FieldState = BoardState & {
   createChat: (name: string, memberIds: string[], projectId?: string) => string;
   setChatMembers: (chatId: string, memberIds: string[]) => void;
   markNoticesRead: () => void;
-  addEmployee: (input: { name: string; trade: string; role: Role; pin: string }) => Promise<"ok" | "bad" | "taken">;
+  addEmployee: (input: { name: string; trade: string; role: Role; pin: string; phone: string; email: string; address: string }) => Promise<"ok" | "bad" | "taken" | "reserved">;
+  removeEmployee: (employeeId: string) => void;
+  approveEmployee: (employeeId: string) => void;
+  adminUpdateEmployee: (input: {
+    employeeId: string;
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+    trade: string;
+    role: Role;
+    pin: string;
+  }) => Promise<"ok" | "bad" | "taken">;
+  register: (input: {
+    name: string;
+    phone: string;
+    address: string;
+    role: "admin" | "worker";
+    pin: string;
+  }) => Promise<"ok" | "pending" | "bad" | "taken">;
+  updateProfile: (input: { name: string; phone: string; email: string; address: string; pin: string }) => Promise<"ok" | "bad" | "taken">;
   addProject: (name: string) => string;
-  unlock: (pin: string) => Promise<boolean>;
+  unlock: (pin: string) => Promise<"ok" | "bad" | "pending">;
 };
 
 const blank = emptyBoard();
@@ -146,6 +168,12 @@ export const useFieldStore = create<FieldState>()((set, get) => {
       if (!me) return;
       void commit({ type: "clockOut", employeeId: me });
     },
+    clockInEmployee: (employeeId) => {
+      void commit({ type: "clockIn", employeeId });
+    },
+    clockOutEmployee: (employeeId) => {
+      void commit({ type: "clockOut", employeeId });
+    },
     stopOpenAux: (employeeId) => {
       const me = employeeId ?? get().currentUserId;
       if (!me) return;
@@ -215,6 +243,37 @@ export const useFieldStore = create<FieldState>()((set, get) => {
       if (res && "status" in res && res.status) return res.status;
       return "ok";
     },
+    removeEmployee: (employeeId) => {
+      void commit({ type: "removeEmployee", employeeId });
+    },
+    approveEmployee: (employeeId) => {
+      void commit({ type: "approveEmployee", employeeId });
+    },
+    adminUpdateEmployee: async (input) => {
+      const action = { type: "adminUpdateEmployee" as const, ...input };
+      const local = applyBoard(slice(get()), action);
+      if (!local.ok) return local.status === "taken" ? "taken" : "bad";
+      const res = await commit(action);
+      if (res && "status" in res && res.status === "taken") return "taken";
+      if (res && "ok" in res && res.ok === false) return "bad";
+      return "ok";
+    },
+    register: async (input) => {
+      const res = await registerAccount({ data: input });
+      if (!res?.ok) return res?.status === "taken" ? "taken" : "bad";
+      return res.status === "pending" ? "pending" : "ok";
+    },
+    updateProfile: async (input) => {
+      const employeeId = get().currentUserId;
+      if (!employeeId) return "bad";
+      const action = { type: "updateProfile" as const, employeeId, ...input };
+      const local = applyBoard(slice(get()), action);
+      if (!local.ok) return local.status === "taken" ? "taken" : "bad";
+      const res = await commit(action);
+      if (res && "status" in res && res.status === "taken") return "taken";
+      if (res && "ok" in res && res.ok === false) return "bad";
+      return "ok";
+    },
     addProject: (name) => {
       const existing = get().projects.find((p) => p.name.toLowerCase() === name.trim().toLowerCase());
       if (existing) return existing.id;
@@ -224,10 +283,11 @@ export const useFieldStore = create<FieldState>()((set, get) => {
     },
     unlock: async (pin) => {
       const res = await unlockBoard({ data: { pin } });
-      if (!res) return false;
+      if (!res) return "bad";
+      if ("pending" in res && res.pending) return "pending";
       localStorage.setItem(SESSION_KEY, res.token);
       get().adopt(res);
-      return true;
+      return "ok";
     },
   };
 });

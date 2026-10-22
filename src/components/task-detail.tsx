@@ -8,6 +8,7 @@ import { formatClock, formatDay, formatDuration } from "@/lib/format";
 import { openAux, openShift, useFieldStore } from "@/lib/store";
 import { useNow } from "@/lib/hooks";
 import { compressImage } from "@/lib/utils";
+import { SUPPORT_AUTHOR_ID, SUPPORT_AUTHOR_NAME } from "@/lib/seed";
 import { toast } from "sonner";
 
 export function TaskDetail() {
@@ -194,7 +195,10 @@ export function TaskDetail() {
             <h3 className="mb-2 text-sm font-medium">Notes</h3>
             <ul className="space-y-3">
               {task.comments.map((c) => {
-                const a = employees.find((e) => e.id === c.authorId);
+                const a =
+                  c.authorId === SUPPORT_AUTHOR_ID
+                    ? { name: SUPPORT_AUTHOR_NAME, initials: "FS" }
+                    : employees.find((e) => e.id === c.authorId);
                 return (
                   <li key={c.id} className="flex gap-2">
                     <Avatar initials={a?.initials ?? "?"} />

@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SetupAndroidRouteImport } from './routes/setup.android'
+import { Route as SetupIphoneRouteImport } from './routes/setup.iphone'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SetupAndroidRoute = SetupAndroidRouteImport.update({
+  id: '/setup/android',
+  path: '/setup/android',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupIphoneRoute = SetupIphoneRouteImport.update({
+  id: '/setup/iphone',
+  path: '/setup/iphone',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/setup/android': typeof SetupAndroidRoute
+  '/setup/iphone': typeof SetupIphoneRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/setup/android': typeof SetupAndroidRoute
+  '/setup/iphone': typeof SetupIphoneRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/setup/android': typeof SetupAndroidRoute
+  '/setup/iphone': typeof SetupIphoneRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/setup/android' | '/setup/iphone'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/setup/android' | '/setup/iphone'
+  id: '__root__' | '/' | '/setup/android' | '/setup/iphone'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SetupAndroidRoute: typeof SetupAndroidRoute
+  SetupIphoneRoute: typeof SetupIphoneRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/setup/android': {
+      id: '/setup/android'
+      path: '/setup/android'
+      fullPath: '/setup/android'
+      preLoaderRoute: typeof SetupAndroidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup/iphone': {
+      id: '/setup/iphone'
+      path: '/setup/iphone'
+      fullPath: '/setup/iphone'
+      preLoaderRoute: typeof SetupIphoneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SetupAndroidRoute: SetupAndroidRoute,
+  SetupIphoneRoute: SetupIphoneRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

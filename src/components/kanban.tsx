@@ -91,13 +91,13 @@ export function KanbanBoard({ mineOnly }: { mineOnly?: boolean }) {
   };
 
   return (
-    <div className="snap-board flex gap-3 overflow-x-auto pb-24 md:grid md:grid-cols-4 md:overflow-visible md:pb-4">
+    <div className="flex flex-col gap-6 pb-24 md:grid md:grid-cols-4 md:gap-3 md:pb-4">
       {COLUMNS.map((col) => {
         const list = visible.filter((t) => t.status === col.id);
         return (
           <section
             key={col.id}
-            className="snap-col flex w-[min(85vw,22rem)] shrink-0 flex-col md:w-auto"
+            className="flex w-full flex-col md:w-auto"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => onDrop(col.id, e)}
           >

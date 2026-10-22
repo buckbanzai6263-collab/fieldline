@@ -2,7 +2,14 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { formatClock } from "@/lib/format";
+import { SUPPORT_AUTHOR_ID, SUPPORT_AUTHOR_NAME } from "@/lib/seed";
+import { isAdmin } from "@/lib/types";
 import { useFieldStore } from "@/lib/store";
+
+function authorOf(id: string, employees: { id: string; name: string; initials: string }[]) {
+  if (id === SUPPORT_AUTHOR_ID) return { name: SUPPORT_AUTHOR_NAME, initials: "FS" };
+  return employees.find((e) => e.id === id);
+}
 
 export function ChatView() {
   const me = useFieldStore((s) => s.employees.find((e) => e.id === s.currentUserId));
@@ -12,17 +19,15 @@ export function ChatView() {
   const openChatId = useFieldStore((s) => s.openChatId);
   const openChat = useFieldStore((s) => s.openChat);
   const sendMessage = useFieldStore((s) => s.sendMessage);
-  const createChat = useFieldStore((s) => s.createChat);
-  const setChatMembers = useFieldStore((s) => s.setChatMembers);
   const [draft, setDraft] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [invite, setInvite] = useState<string[]>([]);
 
-  const mine = useMemo(() => chats, [chats]);
-  const room = chats.find((c) => c.id === openChatId);
+  const admin = isAdmin(me?.role);
+  const mine = useMemo(
+    () => chats.filter((c) => c.taskId && (admin || c.memberIds.includes(me?.id ?? ""))),
+    [admin, chats, me?.id],
+  );
+  const room = mine.find((c) => c.id === openChatId) ?? null;
   const thread = messages.filter((m) => m.chatId === openChatId);
-  const canAdmin = true;
 
   if (!me) return null;
 
@@ -35,38 +40,20 @@ export function ChatView() {
               All chats
             </button>
             <h2 className="font-display text-2xl tracking-wide">{room.name}</h2>
-            <p className="text-xs text-muted">{room.memberIds.length} people · invite only</p>
+            <p className="text-xs text-muted">
+              {admin ? "Assigned crew can text. Admins can read and reply." : "Only the people assigned to this job."}
+            </p>
           </div>
         </header>
-        {canAdmin && (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {employees.map((e) => {
-              const on = room.memberIds.includes(e.id);
-              return (
-                <button
-                  key={e.id}
-                  type="button"
-                  onClick={() => {
-                    const next = on ? room.memberIds.filter((id) => id !== e.id || id === me.id) : [...room.memberIds, e.id];
-                    setChatMembers(room.id, next);
-                  }}
-                  className={`rounded-full border px-2 py-1 text-xs ${on ? "border-accent text-accent" : "border-border text-muted"}`}
-                >
-                  {e.initials}
-                </button>
-              );
-            })}
-          </div>
-        )}
         <ul className="flex-1 space-y-3 overflow-y-auto">
           {thread.map((m) => {
-            const a = employees.find((e) => e.id === m.authorId);
+            const a = authorOf(m.authorId, employees);
             const mineMsg = m.authorId === me.id;
             return (
               <li key={m.id} className={`flex gap-2 ${mineMsg ? "justify-end" : ""}`}>
-                {!mineMsg && <Avatar initials={a?.initials ?? "?"} />}
+                {!mineMsg && a && <Avatar initials={a.initials} />}
                 <div className={`max-w-[80%] rounded-lg px-3 py-2 ${mineMsg ? "bg-accent text-accent-fg" : "bg-card text-fg"}`}>
-                  {!mineMsg && <p className="text-[11px] opacity-80">{a?.name}</p>}
+                  {!mineMsg && a && <p className="text-[11px] opacity-80">{a.name}</p>}
                   <p className="text-sm">{m.body}</p>
                   <p className={`text-[10px] ${mineMsg ? "text-accent-fg/70" : "text-subtle"}`}>{formatClock(m.createdAt)}</p>
                 </div>
@@ -100,55 +87,18 @@ export function ChatView() {
         <div>
           <h2 className="font-display text-2xl tracking-wide">Chats</h2>
           <p className="text-sm text-muted">
-            Assign a crew and a job chat opens. Everything is open for this demo.
+            {admin
+              ? "Every job text is here. You can open one and reply."
+              : "Each job has its own text. Only the people assigned to that job can see it."}
           </p>
         </div>
-        {canAdmin && (
-          <Button variant="secondary" size="sm" onClick={() => setCreating((v) => !v)}>
-            New room
-          </Button>
-        )}
       </div>
-      {creating && canAdmin && (
-        <form
-          className="space-y-3 rounded-xl border border-border bg-card p-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!newName.trim()) return;
-            const id = createChat(newName.trim(), invite);
-            setCreating(false);
-            setNewName("");
-            setInvite([]);
-            openChat(id);
-          }}
-        >
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Room name"
-            className="h-11 w-full rounded-lg border border-border bg-bg px-3 text-sm"
-          />
-          <div className="flex flex-wrap gap-2">
-            {employees
-              .filter((e) => e.id !== me.id)
-              .map((e) => {
-                const on = invite.includes(e.id);
-                return (
-                  <button
-                    key={e.id}
-                    type="button"
-                    onClick={() => setInvite((ids) => (on ? ids.filter((i) => i !== e.id) : [...ids, e.id]))}
-                    className={`rounded-full border px-3 py-1 text-xs ${on ? "border-accent text-accent" : "border-border text-muted"}`}
-                  >
-                    {e.name}
-                  </button>
-                );
-              })}
-          </div>
-          <Button type="submit">Create</Button>
-        </form>
-      )}
       <ul className="space-y-2">
+        {mine.length === 0 && (
+          <li className="text-sm text-subtle">
+            {admin ? "No job texts yet." : "No job texts yet. You’ll see one here when you’re assigned to a job."}
+          </li>
+        )}
         {mine.map((c) => {
           const last = [...messages].reverse().find((m) => m.chatId === c.id);
           return (

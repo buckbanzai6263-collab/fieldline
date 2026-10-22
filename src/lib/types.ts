@@ -1,5 +1,7 @@
 export type Role = "admin" | "supervisor" | "worker";
 
+export type AccountStatus = "active" | "pending";
+
 export type Employee = {
   id: string;
   name: string;
@@ -7,7 +9,10 @@ export type Employee = {
   trade: string;
   initials: string;
   phone: string;
+  email?: string;
+  address?: string;
   pin: string;
+  status?: AccountStatus;
 };
 
 export type Project = {
@@ -86,9 +91,10 @@ export type Notice = {
   body: string;
   read: boolean;
   createdAt: string;
+  chatId?: string;
 };
 
-export type TabId = "home" | "board" | "mine" | "clock" | "chat" | "reports" | "people";
+export type TabId = "home" | "board" | "mine" | "clock" | "chat" | "reports" | "hours" | "people" | "account";
 
 export const COLUMNS: { id: ColumnId; label: string }[] = [
   { id: "todo", label: "To Do" },
@@ -97,7 +103,17 @@ export const COLUMNS: { id: ColumnId; label: string }[] = [
   { id: "done", label: "Done" },
 ];
 
-export const OPEN_PERMISSIONS = true;
+export function isAdmin(role: Role | undefined) {
+  return role === "admin";
+}
+
+export function isMasterAdmin(id: string | null | undefined) {
+  return id === "e_vince";
+}
+
+export function roleLabel(role: Role) {
+  return role === "admin" ? "Admin" : "Field Tech";
+}
 
 export function isOnTask(task: Task, employeeId: string | null | undefined) {
   if (!employeeId) return false;

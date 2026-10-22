@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { AssignForm } from "@/components/assign-form";
 import { formatDuration } from "@/lib/format";
 import { useNow } from "@/lib/hooks";
-import { isOnTask } from "@/lib/types";
+import { isAdmin, isOnTask } from "@/lib/types";
 import { openAux, openShift, useFieldStore, useMe } from "@/lib/store";
 
 export function HomeView() {
@@ -22,7 +22,7 @@ export function HomeView() {
   const mine = tasks.filter((t) => isOnTask(t, me.id) && t.status !== "done");
   const shift = openShift(me.id, entries);
   const aux = openAux(me.id, entries);
-  const canAssign = true;
+  const canAssign = isAdmin(me.role);
   const onClock = employees.filter((e) => openShift(e.id, entries));
   const urgent = tasks.filter((t) => t.priority === "urgent" && t.status !== "done");
 
@@ -59,7 +59,7 @@ export function HomeView() {
       {canAssign && assignOpen && (
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-xl tracking-wide">Assign task</h3>
+            <h3 className="font-display text-xl tracking-wide">Open Job</h3>
             <button type="button" className="text-sm text-muted" onClick={() => setAssignOpen(false)}>
               Close
             </button>
