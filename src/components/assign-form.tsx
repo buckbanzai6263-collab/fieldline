@@ -4,7 +4,7 @@ import type { Priority } from "@/lib/types";
 import { useFieldStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-export function AssignForm({ onDone, submitLabel = "Open Job" }: { onDone?: () => void; submitLabel?: string }) {
+export function AssignForm({ onDone, submitLabel = "Add Job" }: { onDone?: () => void; submitLabel?: string }) {
   const employees = useFieldStore((s) => s.employees);
   const projects = useFieldStore((s) => s.projects);
   const createTask = useFieldStore((s) => s.createTask);

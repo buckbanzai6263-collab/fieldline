@@ -1,4 +1,4 @@
-import { MASTER_ADMIN_ID, MASTER_ADMIN_NAME, MASTER_ADMIN_PIN, OWNER_ID, SUPPORT_AUTHOR_ID, SUPPORT_AUTHOR_NAME } from "./seed";
+import { MASTER_ADMIN_ID, MASTER_ADMIN_NAME, MASTER_ADMIN_PIN, SUPPORT_AUTHOR_ID, SUPPORT_AUTHOR_NAME } from "./seed";
 import type { ChatMessage, ChatRoom, ColumnId, Comment, Employee, Notice, Photo, Priority, Project, Role, Task, TimeEntry, TimeKind } from "./types";
 import { uid } from "./utils";
 
@@ -61,17 +61,6 @@ export type ApplyResult = { state: BoardState; ok: boolean; status?: "ok" | "bad
 export function emptyBoard(): BoardState {
   return {
     employees: [
-      {
-        id: OWNER_ID,
-        name: "Owner",
-        role: "admin",
-        trade: "Master",
-        initials: "OW",
-        phone: "",
-        address: "",
-        pin: "",
-        status: "active",
-      },
       {
         id: MASTER_ADMIN_ID,
         name: MASTER_ADMIN_NAME,

@@ -59,7 +59,7 @@ export function HomeView() {
       {canAssign && assignOpen && (
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-xl tracking-wide">Open Job</h3>
+            <h3 className="font-display text-xl tracking-wide">Add Job</h3>
             <button type="button" className="text-sm text-muted" onClick={() => setAssignOpen(false)}>
               Close
             </button>

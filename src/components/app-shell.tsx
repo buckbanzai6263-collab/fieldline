@@ -135,7 +135,7 @@ export function AppShell() {
             )}
             {canAssign && (
               <Button size="sm" onClick={() => setAssignOpen(!assignOpen)}>
-                {visibleTab === "board" ? "Add Job" : "Open Job"}
+                Add Job
               </Button>
             )}
             <button type="button" className="text-xs text-muted md:hidden" onClick={() => setUser(null)}>
@@ -213,12 +213,12 @@ export function AppShell() {
           {assignOpen && canAssign && tab !== "home" && (
             <div className="mx-auto mb-5 max-w-lg rounded-xl border border-border bg-card p-4">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-display text-xl tracking-wide">{visibleTab === "board" ? "Add Job" : "Open Job"}</h2>
+                <h2 className="font-display text-xl tracking-wide">Add Job</h2>
                 <button type="button" className="text-sm text-muted" onClick={() => setAssignOpen(false)}>
                   Close
                 </button>
               </div>
-              <AssignForm submitLabel={visibleTab === "board" ? "Add Job" : "Open Job"} />
+              <AssignForm />
             </div>
           )}
           {visibleTab === "home" && <HomeView />}

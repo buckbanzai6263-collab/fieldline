@@ -48,7 +48,7 @@ export function PeopleView() {
             Add
           </Button>
           <Button size="sm" onClick={() => setOpen((v) => !v)}>
-            Open Job
+            Add Job
           </Button>
         </div>
         )}
@@ -271,8 +271,8 @@ function EditAccount({
   const [email, setEmail] = useState(employee?.email ?? "");
   const [trade, setTrade] = useState(employee?.trade ?? "");
   const [role, setRole] = useState<Role>(employee?.role === "admin" ? "admin" : "worker");
-  const [pin, setPin] = useState(employee?.pin ?? "");
-  const [confirm, setConfirm] = useState(employee?.pin ?? "");
+  const [pin, setPin] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const lockedRole = isMasterAdmin(employee?.id);
@@ -284,8 +284,8 @@ function EditAccount({
       className="space-y-3 rounded-xl border border-border bg-card p-4"
       onSubmit={(e) => {
         e.preventDefault();
-        if (pin !== confirm || !/^\d{4}$/.test(pin)) {
-          setNote("Enter the same 4-digit code in both fields.");
+        if ((pin || confirm) && (pin !== confirm || !/^\d{4}$/.test(pin))) {
+          setNote("To change the code, enter the same 4 digits in both fields. Leave both blank to keep the current code.");
           return;
         }
         setSaving(true);
@@ -296,7 +296,7 @@ function EditAccount({
             return;
           }
           if (result === "bad") {
-            setNote("Need a name and a 4-digit code.");
+            setNote("Need a name. A new code must be 4 digits.");
             return;
           }
           onClose();
@@ -327,17 +327,18 @@ function EditAccount({
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
           inputMode="numeric"
-          placeholder="4-digit code"
+          placeholder="New code, or leave blank"
           className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-bg px-3 text-sm tabular-nums"
         />
         <input
           value={confirm}
           onChange={(e) => setConfirm(e.target.value.replace(/\D/g, "").slice(0, 4))}
           inputMode="numeric"
-          placeholder="Confirm code"
+          placeholder="Confirm new code"
           className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-bg px-3 text-sm tabular-nums"
         />
       </div>
+      <p className="text-xs text-muted">Leave both code fields blank to keep the current sign-in code.</p>
       {note && <p className="text-sm text-danger">{note}</p>}
       <Button type="submit" className="w-full" disabled={saving}>
         {saving ? "Saving" : "Save account"}
